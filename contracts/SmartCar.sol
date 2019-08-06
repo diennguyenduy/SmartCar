@@ -1,8 +1,8 @@
-pragma solidity ^0.4.4;
+pragma solidity 0.5.0;
 
 contract SmartCar {
   //The address of the car, which will sign transactions made by this contract.
-  address public carSigner;
+  address payable public carSigner;
 
   // Value of the car, in wei
   uint public carValue;
@@ -77,7 +77,7 @@ contract SmartCar {
   // Functions
   ////////////////////////////////////
 
-  function SmartCar(bytes32 _licensePlate, uint _carValue) public {
+  constructor(bytes32 _licensePlate, uint _carValue) public {
     require(_licensePlate.length >0 && _carValue > 0);
     carSigner = msg.sender;
     carValue = _carValue;
@@ -94,7 +94,7 @@ contract SmartCar {
   //and that they can't be changed.
   //We are basically doing the purchase of the car, off-chain.
   //We also assume that each person payed the same amount for the car, thus owning equal shares.
-  function setOwners(address[] _owners) public {
+  function setOwners(address[] memory _owners) public {
     require(msg.sender == carSigner);
     require(_owners.length > 0 && _owners.length <= MAX_OWNERS);
 
@@ -142,7 +142,7 @@ contract SmartCar {
 
     balanceToDistribute += msg.value; // ADD SafeMath Library
 
-    E_RentCarDaily(currentDriverAddress,msg.value, currentDriveStartTime,currentDriveRequiredEndTime);
+    emit E_RentCarDaily(currentDriverAddress,msg.value, currentDriveStartTime,currentDriveRequiredEndTime);
 
     //TBD: What happens if the car is returned after the currentDriveRequiredEndTime has ended?
     // Charge more? Add driver to blacklist?
@@ -179,7 +179,7 @@ contract SmartCar {
 
     bool endedWithinPeriod = now <= currentDriveRequiredEndTime;
 
-    E_EndRentCarDaily(currentDriverAddress, now, endedWithinPeriod);
+    emit E_EndRentCarDaily(currentDriverAddress, now, endedWithinPeriod);
 
     currentDriverAddress = address(0);
     currentDriveStatus = DriveStatus.Idle;
@@ -212,7 +212,7 @@ contract SmartCar {
 
     balanceToDistribute -= amount; // ADD SafeMath Library
     carSigner.transfer(amount);
-    E_TransferEthForStipends(carSigner,amount, now);
+    emit E_TransferEthForStipends(carSigner,amount, now);
   }
 
   //Distribute earnings to owners
