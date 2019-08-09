@@ -1,12 +1,16 @@
 pragma solidity 0.5.0;
 
 contract SmartCar {
+  /*
+  * Storages
+  */
+
   //The address of the car, which will sign transactions made by this contract.
   address payable public carSigner;
 
   // Value of the car, in wei
   uint public carValue;
-
+  address public provider;
   bytes32 public licensePlate;
 
   // Owners of the car, they will be the ones that receive payments from the car.
@@ -21,9 +25,6 @@ contract SmartCar {
   uint constant INITIAL_CAR_SHARES = 100;
   mapping (address => uint) public carShares;
 
-  DriverEntity currentDriverEntity;
-  DriveStatus currentDriveStatus;
-
   //To keep track of who's currently using the car
   //If the owners are driving it, it will be their address.
   //If someone rented it, it will be the renter address, so he can be held accountable.
@@ -33,7 +34,10 @@ contract SmartCar {
   uint currentDriveRequiredEndTime = 0;
 
   //Rates
-  uint constant RATE_DAILYRENTAL = 1 ether; //1 ETH
+  uint constant RATE_DAILYRENTAL = 1 ether;
+
+  DriverEntity currentDriverEntity;
+  DriveStatus currentDriveStatus;
 
   enum DriverEntity {
     None,
@@ -68,17 +72,21 @@ contract SmartCar {
         _;
     }
 
+  /*
+  * events
+  */
   event E_TransferEthForStipends(address _carSigner,uint _amount, uint indexed _eventDate);
   event E_RentCarDaily(address indexed _currentDriverAddress,uint _rentValue,uint _rentalStart,uint _rentalEnd);
   event E_EndRentCarDaily(address indexed _currentDriverAddress,uint _rentalEnd, bool _endedWithinPeriod);
 
 
-  ////////////////////////////////////
-  // Functions
-  ////////////////////////////////////
+  /*
+   * Functions
+   */
 
-  constructor(bytes32 _licensePlate, uint _carValue) public {
-    require(_licensePlate.length >0 && _carValue > 0);
+  constructor(bytes32 _licensePlate, uint _carValue, address _provider) public {
+    require(_carValue > 0);
+    provider = _provider;
     carSigner = msg.sender;
     carValue = _carValue;
     licensePlate = _licensePlate;
